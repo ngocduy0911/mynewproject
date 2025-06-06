@@ -1,1 +1,264 @@
-index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">Add commentMore actions
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        #login-form, #library-interface {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 400px;
+            max-width: 100%;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #bdc3c7;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul li {
+            background-color: #ecf0f1;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #bdc3c7;
+        }
+
+        #library-interface {
+            display: none;
+        }
+
+        #book-status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #e74c3c;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Library Management System</h1>
+
+    <!-- Form Đăng nhập -->
+    <div id="login-form">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <!-- Giao diện hệ thống thư viện -->
+    <div id="library-interface">
+        <h2>Welcome, <span id="user-name"></span></h2>
+        <button class="logout-button" onclick="logout()">Logout</button>
+        <!-- Bảng danh sách sách -->
+        <h3>Library Books</h3>
+        <table id="book-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Availability</th>
+                    <th>Borrower</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <!-- Mượn / Trả sách -->
+        <h3>Borrow or Return a Book</h3>
+        <input type="text" id="book-id" placeholder="Book ID">
+        <button onclick="borrowBook()">Borrow Book</button>
+        <button onclick="returnBook()">Return Book</button>
+
+        <!-- Kiểm tra tình trạng sách -->
+        <h3>Check Book Status</h3>
+        <input type="text" id="check-book-id" placeholder="Book ID">
+        <button onclick="checkBookStatus()">Check Status</button>
+        <p id="book-status"></p>
+    </div>
+
+    <script>
+        // Danh sách sách ban đầu
+        let books = [
+            { id: "1", title: "Book One", available: true, borrowedBy: null },
+            { id: "2", title: "Book Two", available: true, borrowedBy: null },
+            { id: "3", title: "Book Three", available: true, borrowedBy: null }
+        ];
+
+        // Kiểm tra nếu đã đăng nhập trước đó
+        if (localStorage.getItem('loggedInUser')) {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('library-interface').style.display = 'block';
+            document.getElementById('user-name').innerText = localStorage.getItem('loggedInUser');
+            displayBooks();
+        }
+
+        // Đăng nhập
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username && password) {
+                localStorage.setItem('loggedInUser', username);
+                document.getElementById('user-name').innerText = username;
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('library-interface').style.display = 'block';
+                displayBooks();
+            } else {
+                alert('Please enter username and password');
+            }
+        }
+
+        // Đăng xuất
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('library-interface').style.display = 'none';
+        }
+
+        // Hiển thị danh sách sách
+        function displayBooks() {
+            const tbody = document.querySelector('#book-table tbody');
+            tbody.innerHTML = ''; // Xóa danh sách cũ
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.id}</td>
+                    <td>${book.title}</td>
+                    <td>${book.available ? 'Available' : 'Borrowed'}</td>
+                    <td>${book.borrowedBy ? book.borrowedBy : 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Mượn sách
+        function borrowBook() {
+            const bookId = document.getElementById('book-id').value;
+            const user = localStorage.getItem('loggedInUser');
+            const book = books.find(b => b.id === bookId);
+
+            if (book) {
+                if (book.available) {
+                    book.available = false;
+                    book.borrowedBy = user;
+                    alert(`You have borrowed "${book.title}"`);
+                } else {
+                    alert(`This book is currently borrowed by ${book.borrowedBy}`);
+                }
+            } else {
+                alert('Book not found');
+            }
+
+            displayBooks();
+        }
+
+        // Trả sách
+        function returnBook() {
+            const bookId = document.getElementById('book-id').value;
+            const book = books.find(b => b.id === bookId);
+            const user = localStorage.getItem('loggedInUser');
+
+            if (book) {
+                if (!book.available && book.borrowedBy === user) {
+                    book.available = true;
+                    book.borrowedBy = null;
+                    alert(`You have returned "${book.title}"`);
+                } else if (book.available) {
+                    alert(`This book is not borrowed`);
+                } else {
+                    alert(`You cannot return a book borrowed by ${book.borrowedBy}`);
+                }
+            } else {
+                alert('Book not found');
+            }
+
+            displayBooks();
+        }
+
+        // Kiểm tra tình trạng sách
+        function checkBookStatus() {
+            const bookId = document.getElementById('check-book-id').value;
+            const book = books.find(b => b.id === bookId);
+
+            if (book) {
+                document.getElementById('book-status').innerText = `${book.title} is ${book.available ? 'Available' : 'Borrowed by ' + book.borrowedBy}`;
+            } else {
+                document.getElementById('book-status').innerText = 'Book not found';
+            }
+        }
+    </script>
+</body>
+</html>Add comment
