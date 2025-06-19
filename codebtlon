@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Thư Viện</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .dashboard-content {
+            transition: all 0.3s ease;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Login Screen -->
+    <div id="login-screen" class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <div class="text-center mb-8">
+                <i class="fas fa-book-open text-5xl text-blue-600 mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-800">Hệ Thống Thư Viện</h1>
+                <p class="text-gray-600">Đăng nhập để tiếp tục</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Tài khoản</label>
+                    <input type="text" id="username" name="username" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="Nhập tài khoản" required>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <input type="password" id="password" name="password" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="Nhập mật khẩu" required>
+                </div>
+                
+                <div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Đăng nhập
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-6 text-center text-sm text-gray-600">
+                <p>Liên hệ quản trị viên nếu bạn quên mật khẩu</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (Hidden by default) -->
+    <div id="dashboard" class="hidden">
+        <!-- Sidebar -->
+        <div class="sidebar fixed left-0 top-0 bottom-0 w-64 bg-blue-800 text-white shadow-lg">
+            <div class="p-4 flex items-center space-x-3 border-b border-blue-700">
+                <i class="fas fa-book text-2xl"></i>
+                <h2 class="text-xl font-bold">Thư Viện Số</h2>
+            </div>
+            
+            <nav class="p-4">
+                <div class="mb-8">
+                    <p class="text-blue-200 uppercase text-xs font-semibold mb-2">Menu chính</p>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#" data-tab="dashboard-tab" class="tab-link flex items-center space-x-3 p-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-tachometer-alt w-6"></i>
+                                <span>Bảng điều khiển</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="books-tab" class="tab-link flex items-center space-x-3 p-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-book w-6"></i>
+                                <span>Quản lý sách</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="borrow-tab" class="tab-link flex items-center space-x-3 p-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-hand-holding w-6"></i>
+                                <span>Mượn sách</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="return-tab" class="tab-link flex items-center space-x-3 p-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-undo w-6"></i>
+                                <span>Trả sách</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-tab="search-tab" class="tab-link flex items-center space-x-3 p-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-search w-6"></i>
+                                <span>Tìm kiếm sách</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <p class="text-blue-200 uppercase text-xs font-semibold mb-2">Tài khoản</p>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#" id="logout-btn" class="flex items-center space-x-3 p-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-sign-out-alt w-6"></i>
+                                <span>Đăng xuất</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="dashboard-content ml-64 p-8">
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content active">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Bảng điều khiển</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Tổng số sách</p>
+                                <h3 class="text-2xl font-bold" id="total-books">0</h3>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-book text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Sách đang mượn</p>
+                                <h3 class="text-2xl font-bold" id="borrowed-books">0</h3>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-hand-holding text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">Sách có sẵn</p>
+                                <h3 class="text-2xl font-bold" id="available-books">0</h3>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-check-circle text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Hoạt động gần đây</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hoạt động</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi tiết</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-log" class="bg-white divide-y divide-gray-200">
+                                <!-- Activity logs will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Books Management Tab -->
+            <div id="books-tab" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">Quản lý sách</h1>
+                    <button id="add-book-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                        <i class="fas fa-plus mr-2"></i> Thêm sách mới
+                    </button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã sách</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên sách</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tác giả</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Năm xuất bản</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="books-list" class="bg-white divide-y divide-gray-200">
+                                <!-- Books will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Borrow Book Tab -->
+            <div id="borrow-tab" class="tab-content">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Mượn sách</h1>
+                
+                <div class="bg-white p-6 rounded-lg shadow mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Tìm kiếm sách</h2>
+                    <div class="flex space-x-4">
+                        <input type="text" id="borrow-search" placeholder="Nhập tên sách hoặc mã sách" 
+                               class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="borrow-search-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                            <i class="fas fa-search mr-2"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Kết quả tìm kiếm</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="borrow-results">
+                        <!-- Search results will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Return Book Tab -->
+            <div id="return-tab" class="tab-content">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Trả sách</h1>
+                
+                <div class="bg-white p-6 rounded-lg shadow mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Sách đang mượn</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã sách</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên sách</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày mượn</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn trả</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="borrowed-books-list" class="bg-white divide-y divide-gray-200">
+                                <!-- Borrowed books will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Book Tab -->
+            <div id="search-tab" class="tab-content">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Tìm kiếm sách</h1>
+                
+                <div class="bg-white p-6 rounded-lg shadow mb-6">
+                    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                        <div class="flex-1">
+                            <label for="search-title" class="block text-sm font-medium text-gray-700 mb-1">Tên sách</label>
+                            <input type="text" id="search-title" placeholder="Nhập tên sách" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="flex-1">
+                            <label for="search-author" class="block text-sm font-medium text-gray-700 mb-1">Tác giả</label>
+                            <input type="text" id="search-author" placeholder="Nhập tên tác giả" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="flex-1">
+                            <label for="search-status" class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                            <select id="search-status" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">Tất cả</option>
+                                <option value="available">Có sẵn</option>
+                                <option value="borrowed">Đã mượn</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="search-btn" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                        <i class="fas fa-search mr-2"></i> Tìm kiếm
+                    </button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Kết quả tìm kiếm</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã sách</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên sách</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tác giả</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Năm XB</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="search-results" class="bg-white divide-y divide-gray-200">
+                                <!-- Search results will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Book Modal (Hidden by default) -->
+    <div id="add-book-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Thêm sách mới</h3>
+                    <button id="close-add-book-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="add-book-form" class="space-y-4">
+                    <div>
+                        <label for="book-title" class="block text-sm font-medium text-gray-700 mb-1">Tên sách</label>
+                        <input type="text" id="book-title" name="book-title" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Nhập tên sách" required>
+                    </div>
+                    
+                    <div>
+                        <label for="book-author" class="block text-sm font-medium text-gray-700 mb-1">Tác giả</label>
+                        <input type="text" id="book-author" name="book-author" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Nhập tên tác giả" required>
+                    </div>
+                    
+                    <div>
+                        <label for="book-year" class="block text-sm font-medium text-gray-700 mb-1">Năm xuất bản</label>
+                        <input type="number" id="book-year" name="book-year" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Nhập năm xuất bản" min="1900" max="2099" required>
+                    </div>
+                    
+                    <div>
+                        <label for="book-isbn" class="block text-sm font-medium text-gray-700 mb-1">Mã ISBN</label>
+                        <input type="text" id="book-isbn" name="book-isbn" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Nhập mã ISBN">
+                    </div>
+                    
+                    <div>
+                        <label for="book-description" class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+                        <textarea id="book-description" name="book-description" rows="3" 
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                  placeholder="Nhập mô tả sách"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-add-book" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                            <i class="fas fa-save mr-2"></i> Lưu lại
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrow Book Modal (Hidden by default) -->
+    <div id="borrow-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Mượn sách</h3>
+                    <button id="close-borrow-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="borrow-form" class="space-y-4">
+                    <input type="hidden" id="borrow-book-id">
+                    
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2" id="borrow-book-title">Tên sách</h4>
+                        <p class="text-sm text-gray-600" id="borrow-book-author">Tác giả</p>
+                    </div>
+                    
+                    <div>
+                        <label for="borrower-name" class="block text-sm font-medium text-gray-700 mb-1">Tên người mượn</label>
+                        <input type="text" id="borrower-name" name="borrower-name" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Nhập tên người mượn" required>
+                    </div>
+                    
+                    <div>
+                        <label for="borrow-date" class="block text-sm font-medium text-gray-700 mb-1">Ngày mượn</label>
+                        <input type="date" id="borrow-date" name="borrow-date" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    
+                    <div>
+                        <label for="return-date" class="block text-sm font-medium text-gray-700 mb-1">Hạn trả</label>
+                        <input type="date" id="return-date" name="return-date" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-borrow" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                            <i class="fas fa-check mr-2"></i> Xác nhận
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let books = [
+            { id: 'B001', title: 'Nhà Giả Kim', author: 'Paulo Coelho', year: 1988, isbn: '978-0062315007', status: 'available', description: 'Tiểu thuyết nổi tiếng của Paulo Coelho' },
+            { id: 'B002', title: 'Đắc Nhân Tâm', author: 'Dale Carnegie', year: 1936, isbn: '978-0671027032', status: 'available', description: 'Sách về nghệ thuật giao tiếp và ứng xử' },
+            { id: 'B003', title: 'Tôi Tài Giỏi Bạn Cũng Thế', author: 'Adam Khoo', year: 2009, isbn: '978-0973932301', status: 'borrowed', borrower: 'Nguyễn Văn A', borrowDate: '2023-05-15', returnDate: '2023-06-15', description: 'Sách về phương pháp học tập hiệu quả' },
+            { id: 'B004', title: '7 Thói Quen Hiệu Quả', author: 'Stephen R. Covey', year: 1989, isbn: '978-0743269513', status: 'available', description: 'Sách về phát triển bản thân và lãnh đạo' },
+            { id: 'B005', title: 'Người Bán Hàng Vĩ Đại Nhất Thế Giới', author: 'Og Mandino', year: 1968, isbn: '978-0553277571', status: 'borrowed', borrower: 'Trần Thị B', borrowDate: '2023-06-01', returnDate: '2023-07-01', description: 'Câu chuyện về nghệ thuật bán hàng' }
+        ];
+
+        let activities = [
+            { time: '2023-06-20 14:30', action: 'Mượn sách', details: 'Nguyễn Văn A mượn "Tôi Tài Giỏi Bạn Cũng Thế"' },
+            { time: '2023-06-18 10:15', action: 'Trả sách', details: 'Trần Thị B trả "Nhà Giả Kim"' },
+            { time: '2023-06-15 09:00', action: 'Thêm sách', details: 'Thêm sách mới "7 Thói Quen Hiệu Quả"' },
+            { time: '2023-06-10 16:45', action: 'Mượn sách', details: 'Trần Thị B mượn "Người Bán Hàng Vĩ Đại Nhất Thế Giới"' }
+        ];
+
+        // Current user
+        let currentUser = null;
+
+        // DOM Elements
+        const loginScreen = document.getElementById('login-screen');
+        const dashboard = document.getElementById('dashboard');
+        const loginForm = document.getElementById('login-form');
+        const logoutBtn = document.getElementById('logout-btn');
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const addBookBtn = document.getElementById('add-book-btn');
+        const addBookModal = document.getElementById('add-book-modal');
+        const closeAddBookModal = document.getElementById('close-add-book-modal');
+        const cancelAddBook = document.getElementById('cancel-add-book');
+        const addBookForm = document.getElementById('add-book-form');
+        const borrowModal = document.getElementById('borrow-modal');
+        const closeBorrowModal = document.getElementById('close-borrow-modal');
+        const cancelBorrow = document.getElementById('cancel-borrow');
+        const borrowForm = document.getElementById('borrow-form');
+        const borrowSearchBtn = document.getElementById('borrow-search-btn');
+        const searchBtn = document.getElementById('search-btn');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default for borrow date
+            document.getElementById('borrow-date').valueAsDate = new Date();
+            
+            // Set return date to 14 days from today
+            let returnDate = new Date();
+            returnDate.setDate(returnDate.getDate() + 14);
+            document.getElementById('return-date').valueAsDate = returnDate;
+            
+            // Load sample data
+            updateDashboardStats();
+            renderBooksList();
+            renderActivityLog();
+            renderBorrowedBooksList();
+        });
+
+        // Login form submission
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Simple authentication for demo
+            if (username && password) {
+                currentUser = {
+                    name: username,
+                    role: 'staff' // In a real app, this would come from the server
+                };
+                
+                // Hide login screen and show dashboard
+                loginScreen.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                
+                // Add login activity
+                activities.unshift({
+                    time: new Date().toLocaleString(),
+                    action: 'Đăng nhập',
+                    details: `${username} đã đăng nhập vào hệ thống`
+                });
+                
+                renderActivityLog();
+            } else {
+                alert('Vui lòng nhập tài khoản và mật khẩu');
+            }
+        });
+
+        // Logout button click
+        logoutBtn.addEventListener('click', function() {
+            // Add logout activity
+            activities.unshift({
+                time: new Date().toLocaleString(),
+                action: 'Đăng xuất',
+                details: `${currentUser.name} đã đăng xuất`
+            });
+            
+            // Clear form and show login screen
+            loginForm.reset();
+            dashboard.classList.add('hidden');
+            loginScreen.classList.remove('hidden');
+            currentUser = null;
+        });
+
+        // Tab navigation
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all tabs and contents
+                tabLinks.forEach(l => l.classList.remove('bg-blue-700'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('bg-blue-700');
+                
+                // Show corresponding content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Add book button click
+        addBookBtn.addEventListener('click', function() {
+            addBookModal.classList.remove('hidden');
+        });
+
+        // Close add book modal
+        closeAddBookModal.addEventListener('click', function() {
+            addBookModal.classList.add('hidden');
+        });
+
+        // Cancel add book
+        cancelAddBook.addEventListener('click', function() {
+            addBookModal.classList.add('hidden');
+        });
+
+        // Add book form submission
+        addBookForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('book-title').value;
+            const author = document.getElementById('book-author').value;
+            const year = document.getElementById('book-year').value;
+            const isbn = document.getElementById('book-isbn').value;
+            const description = document.getElementById('book-description').value;
+            
+            // Generate a new book ID
+            const newId = 'B' + (books.length + 1).toString().padStart(3, '0');
+            
+            // Add new book
+            books.push({
+                id: newId,
+                title: title,
+                author: author,
+                year: parseInt(year),
+                isbn: isbn,
+                status: 'available',
+                description: description
+            });
+            
+            // Add activity
+            activities.unshift({
+                time: new Date().toLocaleString(),
+                action: 'Thêm sách',
+                details: `Thêm sách mới "${title}"`
+            });
+            
+            // Update UI
+            updateDashboardStats();
+            renderBooksList();
+            renderActivityLog();
+            
+            // Close modal and reset form
+            addBookModal.classList.add('hidden');
+            this.reset();
+        });
+
+        // Borrow search button click
+        borrowSearchBtn.addEventListener('click', function() {
+            const searchTerm = document.getElementById('borrow-search').value.toLowerCase();
+            
+            if (!searchTerm) {
+                alert('Vui lòng nhập từ khóa tìm kiếm');
+                return;
+            }
+            
+            const results = books.filter(book => 
+                (book.title.toLowerCase().includes(searchTerm) || 
+                 book.id.toLowerCase().includes(searchTerm)) && 
+                book.status === 'available'
+            );
+            
+            renderBorrowResults(results);
+        });
+
+        // Search button click
+        searchBtn.addEventListener('click', function() {
+            const title = document.getElementById('search-title').value.toLowerCase();
+            const author = document.getElementById('search-author').value.toLowerCase();
+            const status = document.getElementById('search-status').value;
+            
+            let results = books;
+            
+            if (title) {
+                results = results.filter(book => book.title.toLowerCase().includes(title));
+            }
+            
+            if (author) {
+                results = results.filter(book => book.author.toLowerCase().includes(author));
+            }
+            
+            if (status !== 'all') {
+                results = results.filter(book => book.status === status);
+            }
+            
+            renderSearchResults(results);
+        });
+
+        // Close borrow modal
+        closeBorrowModal.addEventListener('click', function() {
+            borrowModal.classList.add('hidden');
+        });
+
+        // Cancel borrow
+        cancelBorrow.addEventListener('click', function() {
+            borrowModal.classList.add('hidden');
+        });
+
+        // Borrow form submission
+        borrowForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const bookId = document.getElementById('borrow-book-id').value;
+            const borrowerName = document.getElementById('borrower-name').value;
+            const borrowDate = document.getElementById('borrow-date').value;
+            const returnDate = document.getElementById('return-date').value;
+            
+            // Find the book
+            const bookIndex = books.findIndex(book => book.id === bookId);
+            
+            if (bookIndex !== -1) {
+                // Update book status
+                books[bookIndex].status = 'borrowed';
+                books[bookIndex].borrower = borrowerName;
+                books[bookIndex].borrowDate = borrowDate;
+                books[bookIndex].returnDate = returnDate;
+                
+                // Add activity
+                activities.unshift({
+                    time: new Date().toLocaleString(),
+                    action: 'Mượn sách',
+                    details: `${borrowerName} mượn "${books[bookIndex].title}"`
+                });
+                
+                // Update UI
+                updateDashboardStats();
+                renderBooksList();
+                renderActivityLog();
+                renderBorrowedBooksList();
+                renderBorrowResults([]);
+                
+                // Close modal and reset form
+                borrowModal.classList.add('hidden');
+                this.reset();
+                
+                // Set default dates
+                document.getElementById('borrow-date').valueAsDate = new Date();
+                let newReturnDate = new Date();
+                newReturnDate.setDate(newReturnDate.getDate() + 14);
+                document.getElementById('return-date').valueAsDate = newReturnDate;
+            }
+        });
+
+        // Helper functions
+        function updateDashboardStats() {
+            const totalBooks = books.length;
+            const borrowedBooks = books.filter(book => book.status === 'borrowed').length;
+            const availableBooks = totalBooks - borrowedBooks;
+            
+            document.getElementById('total-books').textContent = totalBooks;
+            document.getElementById('borrowed-books').textContent = borrowedBooks;
+            document.getElementById('available-books').textContent = availableBooks;
+        }
+
+        function renderBooksList() {
+            const booksList = document.getElementById('books-list');
+            booksList.innerHTML = '';
+            
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${book.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.title}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.author}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.year}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${book.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${book.status === 'available' ? 'Có sẵn' : 'Đã mượn'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-blue-600 hover:text-blue-900 mr-3 view-book" data-id="${book.id}">Xem</button>
+                        <button class="text-yellow-600 hover:text-yellow-900 mr-3 edit-book" data-id="${book.id}">Sửa</button>
+                        <button class="text-red-600 hover:text-red-900 delete-book" data-id="${book.id}">Xóa</button>
+                    </td>
+                `;
+                
+                booksList.appendChild(row);
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.view-book').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = this.getAttribute('data-id');
+                    viewBookDetails(bookId);
+                });
+            });
+        }
+
+        function renderActivityLog() {
+            const activityLog = document.getElementById('activity-log');
+            activityLog.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${activity.time}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${activity.action}</td>
+                    <td class="px-6 py-4">${activity.details}</td>
+                `;
+                
+                activityLog.appendChild(row);
+            });
+        }
+
+        function renderBorrowResults(results) {
+            const borrowResults = document.getElementById('borrow-results');
+            borrowResults.innerHTML = '';
+            
+            if (results.length === 0) {
+                borrowResults.innerHTML = '<p class="text-gray-500 col-span-3 text-center py-4">Không tìm thấy sách phù hợp</p>';
+                return;
+            }
+            
+            results.forEach(book => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-md overflow-hidden book-card transition duration-300';
+                
+                card.innerHTML = `
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1">${book.title}</h3>
+                        <p class="text-gray-600 text-sm mb-2">${book.author}</p>
+                        <p class="text-gray-500 text-xs mb-3">Mã sách: ${book.id}</p>
+                        <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition borrow-btn" data-id="${book.id}">
+                            <i class="fas fa-hand-holding mr-2"></i> Mượn sách
+                        </button>
+                    </div>
+                `;
+                
+                borrowResults.appendChild(card);
+            });
+            
+            // Add event listeners to borrow buttons
+            document.querySelectorAll('.borrow-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = this.getAttribute('data-id');
+                    openBorrowModal(bookId);
+                });
+            });
+        }
+
+        function renderBorrowedBooksList() {
+            const borrowedBooksList = document.getElementById('borrowed-books-list');
+            borrowedBooksList.innerHTML = '';
+            
+            const borrowedBooks = books.filter(book => book.status === 'borrowed');
+            
+            if (borrowedBooks.length === 0) {
+                borrowedBooksList.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">Không có sách đang được mượn</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            borrowedBooks.forEach(book => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${book.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.title}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.borrowDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.returnDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-green-600 hover:text-green-900 return-book" data-id="${book.id}">
+                            <i class="fas fa-undo mr-1"></i> Trả sách
+                        </button>
+                    </td>
+                `;
+                
+                borrowedBooksList.appendChild(row);
+            });
+            
+            // Add event listeners to return buttons
+            document.querySelectorAll('.return-book').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = this.getAttribute('data-id');
+                    returnBook(bookId);
+                });
+            });
+        }
+
+        function renderSearchResults(results) {
+            const searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = '';
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">Không tìm thấy sách phù hợp</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            results.forEach(book => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${book.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.title}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.author}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${book.year}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${book.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${book.status === 'available' ? 'Có sẵn' : 'Đã mượn'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        ${book.status === 'available' ? 
+                            `<button class="text-blue-600 hover:text-blue-900 borrow-btn" data-id="${book.id}">
+                                <i class="fas fa-hand-holding mr-1"></i> Mượn
+                            </button>` : 
+                            `<button class="text-green-600 hover:text-green-900 return-book" data-id="${book.id}">
+                                <i class="fas fa-undo mr-1"></i> Trả
+                            </button>`}
+                    </td>
+                `;
+                
+                searchResults.appendChild(row);
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.borrow-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = this.getAttribute('data-id');
+                    openBorrowModal(bookId);
+                });
+            });
+            
+            document.querySelectorAll('.return-book').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = this.getAttribute('data-id');
+                    returnBook(bookId);
+                });
+            });
+        }
+
+        function openBorrowModal(bookId) {
+            const book = books.find(b => b.id === bookId);
+            
+            if (book) {
+                document.getElementById('borrow-book-id').value = book.id;
+                document.getElementById('borrow-book-title').textContent = book.title;
+                document.getElementById('borrow-book-author').textContent = `Tác giả: ${book.author}`;
+                
+                borrowModal.classList.remove('hidden');
+            }
+        }
+
+        function returnBook(bookId) {
+            const bookIndex = books.findIndex(book => book.id === bookId);
+            
+            if (bookIndex !== -1) {
+                // Update book status
+                books[bookIndex].status = 'available';
+                delete books[bookIndex].borrower;
+                delete books[bookIndex].borrowDate;
+                delete books[bookIndex].returnDate;
+                
+                // Add activity
+                activities.unshift({
+                    time: new Date().toLocaleString(),
+                    action: 'Trả sách',
+                    details: `Trả sách "${books[bookIndex].title}"`
+                });
+                
+                // Update UI
+                updateDashboardStats();
+                renderBooksList();
+                renderActivityLog();
+                renderBorrowedBooksList();
+                
+                // If on search tab, update search results
+                if (document.getElementById('search-tab').classList.contains('active')) {
+                    const title = document.getElementById('search-title').value.toLowerCase();
+                    const author = document.getElementById('search-author').value.toLowerCase();
+                    const status = document.getElementById('search-status').value;
+                    
+                    let results = books;
+                    
+                    if (title) {
+                        results = results.filter(book => book.title.toLowerCase().includes(title));
+                    }
+                    
+                    if (author) {
+                        results = results.filter(book => book.author.toLowerCase().includes(author));
+                    }
+                    
+                    if (status !== 'all') {
+                        results = results.filter(book => book.status === status);
+                    }
+                    
+                    renderSearchResults(results);
+                }
+            }
+        }
+
+        function viewBookDetails(bookId) {
+            const book = books.find(b => b.id === bookId);
+            
+            if (book) {
+                let details = `
+                    <h3 class="font-bold text-lg mb-2">${book.title}</h3>
+                    <p class="mb-1"><span class="font-semibold">Tác giả:</span> ${book.author}</p>
+                    <p class="mb-1"><span class="font-semibold">Năm xuất bản:</span> ${book.year}</p>
+                    <p class="mb-1"><span class="font-semibold">Mã sách:</span> ${book.id}</p>
+                    <p class="mb-1"><span class="font-semibold">ISBN:</span> ${book.isbn || 'Không có'}</p>
+                    <p class="mb-1"><span class="font-semibold">Trạng thái:</span> ${book.status === 'available' ? 'Có sẵn' : 'Đã mượn'}</p>
+                `;
+                
+                if (book.status === 'borrowed') {
+                    details += `
+                        <p class="mb-1"><span class="font-semibold">Người mượn:</span> ${book.borrower}</p>
+                        <p class="mb-1"><span class="font-semibold">Ngày mượn:</span> ${book.borrowDate}</p>
+                        <p class="mb-1"><span class="font-semibold">Hạn trả:</span> ${book.returnDate}</p>
+                    `;
+                }
+                
+                if (book.description) {
+                    details += `
+                        <div class="mt-3">
+                            <h4 class="font-semibold mb-1">Mô tả:</h4>
+                            <p class="text-gray-700">${book.description}</p>
+                        </div>
+                    `;
+                }
+                
+                alert(details);
+            }
+        }
+    </script>
+</body>
+</html>
