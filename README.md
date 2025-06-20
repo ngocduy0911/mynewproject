@@ -30,9 +30,9 @@ Dự án **Hệ Thống Quản Lý Thư Viện** được phát triển nhằm h
 
 ## 🛠️ Công Nghệ Sử Dụng
 
-- Ngôn ngữ lập trình: Python / Java
-- Giao diện người dùng: HTML/CSS/JS
-- Cơ sở dữ liệu: MySQL / SQLite
+- Ngôn ngữ lập trình: HTML
+- Giao diện người dùng: HTML
+- Cơ sở dữ liệu: MySQL
 
 ## 📦 Cài Đặt & Chạy Dự Án
 
@@ -42,4 +42,4 @@ git clone https://github.com/nhom5/library-management-system.git
 # Di chuyển vào thư mục dự án
 cd library-management-system
 
-# (Tùy theo công nghệ bạn dùng, có thể hướng dẫn chạy bằng: Python, Java, etc.)
+# (Tùy theo công nghệ bạn dùng, có thể hướng dẫn chạy bằng: HTML
